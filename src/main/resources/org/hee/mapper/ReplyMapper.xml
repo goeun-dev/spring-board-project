@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.hee.mapper.ReplyMapper">
+	<select id="getReply" resultType="int">
+		select bno from tbl_reply where rno = #{rno}
+	</select>
+
+	<select id="replySelect" resultType="org.hee.domain.ReplyVO">
+		select * from tbl_reply where bno = #{bno} order by groupno asc, depth asc
+		limit #{dto.skip},#{dto.amount}
+	</select>
+	
+	<select id="replyCount" resultType="int">
+		select count(bno) from tbl_reply where bno = #{bno}
+	</select>
+	
+	<insert id="insertReple">
+		insert into tbl_reply (bno, content, writer, depth)
+		values
+		(#{bno}, #{content}, #{writer}, #{depth})
+	</insert>
+	
+	<update id="updateGroupno">
+		update tbl_reply set groupno = last_insert_id() where rno = last_insert_id()
+	</update>
+
+	<insert id="insertReReple">
+		insert into tbl_reply (bno, content, writer, groupno, depth)
+		values
+		(#{bno}, #{content}, #{writer}, #{groupno}, #{depth})
+	</insert>
+	
+	<delete id="delete">
+		delete from tbl_reply where rno = #{rno}
+	</delete>
+	
+	<update id="updateDelChk">
+		update tbl_reply set delchk = 1 where rno = #{rno}
+	</update>
+	
+	<update id="update">
+		update tbl_reply set content=#{content} where rno = #{rno}
+	</update>
+</mapper>

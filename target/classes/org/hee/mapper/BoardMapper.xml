@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.hee.mapper.BoardMapper">
+
+	<insert id="updateReplyCnt">
+		update tbl_board set replyCnt = replyCnt + #{amount} where bno = #{bno}
+	</insert>
+
+	<insert id="insert">
+		insert into tbl_board (title,content,writer)
+		values(#{title},#{content},#{writer})
+	</insert>
+
+	<insert id="fileInsert">
+		insert into tbl_board_attach (boardNo, fname, uuid, uploadPath, fileType)
+		values (LAST_INSERT_ID(), #{fname}, #{uuid}, #{uploadPath}, #{image})
+	</insert>
+
+	<insert id="fileUpdate">
+		insert into tbl_board_attach (boardNo, fname, uuid, uploadPath, fileType)
+		values (#{boardNo}, #{fname}, #{uuid}, #{uploadPath}, #{image})
+	</insert>
+
+	<sql id="search">
+		<if test="keyword!=null and types!=null">
+			<foreach collection="types" item="item" open="and ("
+				close=")" separator="OR">
+				<if test="item eq 'T'.toString()">
+					title like concat("%", #{keyword}, "%")
+				</if>
+				<if test="item eq 'C'.toString()">
+					content like concat("%", #{keyword}, "%")
+				</if>
+				<if test="item eq 'W'.toString()">
+					writer like concat("%", #{keyword}, "%")
+				</if>
+			</foreach>
+		</if>
+	</sql>
+
+	<select id="getList" resultMap="boardMap">
+		select
+		board.bno, board.title, board.content, board.writer, board.regdate,
+		board.replyCnt,
+		attach.fname, attach.uuid, attach.uploadPath, attach.fileType
+		from tbl_board_attach attach right outer join tbl_board board
+		on attach.boardNo = board.bno
+		where board.bno > 0
+		<include refid="search"></include>
+		group by board.bno
+		order by board.bno desc
+		limit #{skip}, #{amount}
+	</select>
+
+	<resultMap type="org.hee.domain.BoardVO" id="boardMap">
+		<id column="bno" property="bno" />
+		<result column="title" property="title" />
+		<result column="content" property="content" />
+		<result column="writer" property="writer" />
+		<result column="regdate" property="regdate" />
+		<result column="replyCnt" property="replyCnt" />
+		<collection property="attachList" resultMap="fileMap"></collection>
+	</resultMap>
+
+	<resultMap type="org.hee.domain.AttachDTO" id="fileMap">
+		<result column="boardNo" property="boardNo" />
+		<result column="fname" property="fname" />
+		<result column="uuid" property="uuid" />
+		<result column="uploadPath" property="uploadPath" />
+		<result column="fileType" property="image" />
+	</resultMap>
+
+	<select id="selectOne" resultMap="boardMap">
+		select
+		board.bno, board.title, board.content, board.writer, board.regdate,
+		attach.fname, attach.uuid, attach.uploadPath, attach.fileType
+		from tbl_board_attach attach right outer join tbl_board board
+		on attach.boardNo = board.bno
+		where board.bno = #{bno}
+		order by board.bno desc
+	</select>
+
+	<delete id="delete">
+		delete from tbl_board where bno = #{bno}
+	</delete>
+
+	<update id="update">
+		update tbl_board set title=#{title}, content=#{content} where bno = #{bno}
+	</update>
+
+	<select id="getCount" resultType="int">
+		select count(bno) from tbl_board
+		where bno > 0
+		<include refid="search"></include>
+		order by bno desc
+	</select>
+
+	<delete id="fileDelete">
+		delete from tbl_board_attach where uuid = #{uuid}
+	</delete>
+
+</mapper>
